@@ -1,0 +1,32 @@
+context:
+  version: 0.0.1
+
+package:
+  name: platformers
+  version: ${{ version }}
+
+source:
+  - path: ../../platformers/
+    target_directory: platformers
+  
+  # tag: ${{ version }}
+
+build:
+  number: 1
+  noarch: python
+  script: 
+    - ls .
+    # - $PREFIX/bin/pip install . -v
+
+requirements:
+  host:
+    - pip
+    - python
+  run:
+    - pip
+    - python>=3.10
+
+tests:
+  - python:
+      imports:
+        - fastuuid

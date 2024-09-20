@@ -1,0 +1,29 @@
+context:
+  version: 0.10.0
+
+package:
+  name: fastuuid
+  version: ${{ version }}
+
+source:
+  git: https://github.com/fastuuid/fastuuid.git
+  # tag: ${{ version }}
+
+build:
+  number: 1
+  noarch: python
+  script: $PREFIX/bin/pip install . -v
+
+requirements:
+  host:
+    - maturin
+    - pip
+    - python
+  run:
+    - pip
+    - python>=3.10
+
+tests:
+  - python:
+      imports:
+        - fastuuid
