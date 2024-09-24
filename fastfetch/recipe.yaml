@@ -1,0 +1,94 @@
+context:
+  git_repo_url: https://github.com/fastfetch-cli/fastfetch.git
+  latest_tag: ${{ git.latest_tag( git_repo_url ) }}
+
+package:
+  name: "fastfetch"
+  version: ${{ latest_tag }}
+
+source:
+  - git: ${{ git_repo_url }}
+    tag: ${{ latest_tag }}
+
+  # - git: https://github.com/microsoft/DirectX-Headers.git
+  #   target_directory: directx
+
+build:
+  number: ${{ build|int + (microarch_level|int) * 100 }}
+  dynamic_linking:
+    missing_dso_allowlist: ["libc*", "libm*", "libpthread*", "libdl*"]
+    rpath_allowlist: ["/usr/lib/**", "/usr/lib64/**"]
+  script:
+    # - rsync -avP directx/include/directx/ $PREFIX/include/
+    # - rsync -avP directx/include/wsl/ $PREFIX/include/
+    # - rsync -avP directx/include/dxguids/ $PREFIX/include/
+    - mkdir -p build
+    - cd build && CMAKE_VERBOSE_MAKEFILE=1 $PREFIX/bin/cmake .. ${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=$PREFIX -DSET_TWEAK=Off
+    - $PREFIX/bin/cmake --build . --target fastfetch --target flashfetch -j 16
+    - mkdir -p $PREFIX/bin && cp fastfetch flashfetch $PREFIX/bin/
+    - fastfetch --list-features
+
+# TODO: [] libddcutil
+#       [] wireless
+#       [] yyjson
+#       [] dconf
+#       [] chafa
+#       [] libxfconf
+#       [] librpm
+requirements:
+  host:
+    - if: microarch_level|int > 0
+      then: x86_64-microarch-level ${{ microarch_level }}
+    - ${{ compiler('cxx') }}
+    - ${{ compiler('c') }}
+    - cmake
+    # - pkg-config
+    # - libsqlite
+    - vulkan-headers
+    - vulkan-tools
+    - xorg-libx11
+    - xorg-libxrender
+    - zlib
+    - libdrm
+    - wayland
+    - pthread-stubs
+    - glib
+    - imagemagick
+    - pulseaudio
+    - dbus # [linux]
+    - ocl-icd # [linux]
+    - mesalib
+    # - ${{ cdt('mesa-libegl') }}
+    - libglx-devel
+    - ${{ cdt('mesa-libegl-devel') }}
+    - rsync
+    # - sysroot_${{ target_platform }} == 2.17
+
+  # run:
+  #   - sysroot_${{ target_platform }}
+  #   - libegl
+  #   - libglx
+
+  ignore_run_exports:
+    from_package:
+      - libglib
+      - glib
+      - libdrm
+      - xorg-libxrender
+      - zlib
+      - xorg-libx11
+      - wayland
+      - gcc_${{ target_platform }}
+      - gxx_${{ target_platform }}
+      - pulseaudio
+      - dbus
+      - ocl-icd
+      - libglx-devel
+      - sysroot_${{ target_platform }}
+      - if: microarch_level|int > 0
+        then: x86_64-microarch-level ${{ microarch_level }}
+tests:
+  - script:
+      - echo $PREFIX
+      - fastfetch --list-features
+      # - flashfetch
