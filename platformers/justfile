@@ -1,0 +1,11 @@
+build:
+  rattler-build build -r recipe.yaml \
+  {{ if path_exists("variant_config.yaml") == 'true' { "--variant-config " + "variant_config.yaml" } else { "" } }} \
+  --no-include-recipe --experimental -vvvv \
+  --output-dir ../output \
+  -c nvidia/label/cuda-12.4.0 \
+  -c nvidia \
+  -c conda-forge \
+  -c pytorch \
+  --keep-build \
+  # --keep-workspace \
