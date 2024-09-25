@@ -1,8 +1,11 @@
 context:
-  version: 0.10.0
+  package_name: fastuuid
+  git_repo_url: https://github.com/fastuuid/fastuuid.git
+  latest_tag: ${{ git.latest_tag( git_repo_url ) }}
+  version: ${{ latest_tag[1:] }}
 
 package:
-  name: fastuuid
+  name: ${{ package_name }}
   version: ${{ version }}
 
 source:
@@ -11,17 +14,34 @@ source:
 
 build:
   number: 1
-  noarch: python
-  script: $PREFIX/bin/pip install . -v
+  # noarch: python
+  # files:
+  #   include:
+  #     - "**/*"
+  #   exclude:
+  #     # - $SP_DIR/${{ package_name }}/__pycache__/*
+  #     - "**/__pycache__/*"
 
+  script:
+    - $PREFIX/bin/pip install . -v
+    # - mkdir -p $PREFIX/bin
+    # - cp "$RECIPE_DIR/post-link.sh" $PREFIX/bin/.${{package_name}}-post-link.sh
+    # - chmod +x $PREFIX/bin/.${{package_name}}-post-link.sh
+    # - ls $SP_DIR/${{ package_name }}/__pycache__
+    - rm -rf $SP_DIR/${{ package_name }}/__pycache__
+  python:
+    skip_pyc_compilation:
+      # - "__init__.py"
+      - "**/__init__.py"
 requirements:
   host:
     - maturin
     - pip
+    # - python=3.10
     - python
+
   run:
-    - pip
-    - python>=3.10
+    - python
 
 tests:
   - python:

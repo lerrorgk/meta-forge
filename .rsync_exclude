@@ -1,0 +1,7 @@
+.git
+notebooks
+build
+*.ipynb
+*.so
+*.egg-info
+# assets/private
