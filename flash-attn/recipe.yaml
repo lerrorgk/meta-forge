@@ -1,20 +1,20 @@
 context:
-  name: "flash_attn"
-  cuda: "12.4"
-  pytorch: "2.4.1"
-  fa_git_url: https://github.com/Dao-AILab/flash-attention.git
-  fa_git_tag: ${{ git.latest_tag( fa_git_url ) }}
+  name: "flash-attn"
+  # cuda: "12.4"
+  # pytorch: "2.4.1"
+  git_url: https://github.com/Dao-AILab/flash-attention.git
+  git_tag: ${{ git.latest_tag( git_url ) }}
   # short_cuda: ${{ cuda_compiler_version | lower }}
 
   # fa_cuda_version: ${{  }}
 
 package:
   name: ${{ name }}
-  version: ${{ fa_git_tag[1:] }}
+  version: ${{ git_tag[1:] }}
 
 source:
-  - git: https://github.com/Dao-AILab/flash-attention.git
-    tag: ${{ fa_git_tag }}
+  - git: ${{ git_url }}
+    tag: ${{ git_tag }}
 
 build:
   number: ${{ build|int + (microarch_level|int) * 100 + 1 }}
@@ -50,18 +50,20 @@ requirements:
   host:
     - ${{ compiler('c') }}
     - ${{ compiler('cxx') }}
-    - ${{ compiler('cuda') }}
+    # - ${{ compiler('cuda') }}
     - ${{ stdlib('c') }}
     - sccache
     # - ninja
     # host:
-    - cuda = ${{ cuda }}
+    - cuda
     # - cuda_nvcc = ${{ short_cuda }}
     # - cuda_nvcc_${{ target_platform }}
     - cuda-cudart-dev
     - libcusparse-dev
-    - pytorch::pytorch-cuda = ${{ cuda }}
-    - pytorch::pytorch == ${{ pytorch }}
+    # - pytorch::pytorch-cuda = ${{ cuda }}
+    # - pytorch::pytorch == ${{ pytorch }}
+    - pytorch-cuda ${{ cuda }}
+    - pytorch
     # - pytorch::torchaudio
     # - pytorch::torchvision
     - python
@@ -78,16 +80,16 @@ requirements:
   run:
     - einops
     # - cuda
-    # - pytorch
-  run_constraints:
-    - pytorch ${{ pytorch }}
+    - pytorch
+  # run_constraints:
+  #   - pytorch
     # - pytorch::pytorch-cuda = ${{ short_cuda }}
 tests:
   - script:
       - python -c "import torch, flash_attn, flash_attn_2_cuda"
-    requirements:
-      run:
-        - pytorch::pytorch ${{ pytorch }}
+    # requirements:
+    #   run:
+    #     - pytorch::pytorch ${{ pytorch }}
   # - python:
   #     imports:
   #       - torch

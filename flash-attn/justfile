@@ -8,15 +8,15 @@ build: clean
   --output-dir ../output \
   -c nvidia/label/cuda-12.4.0 \
   -c nvidia \
-  -c conda-forge \
   -c pytorch \
+  -c conda-forge \
   --no-build-id --keep-build \
   2>&1 | tee output_file.txt
   # 2> >(tee error.log) | tee output.log
   # --keep-workspace \
 
 clean:
-  -rm -rf ../output/bld/rattler-build_platformers/
+  -rm -rf ../output/bld/rattler-build_{{name}}/
   -rm -rf ../output/**/{{name}}-*
 
 
