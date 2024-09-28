@@ -3,11 +3,10 @@ context:
   git_repo_url: https://github.com/scikit-build/ninja-python-distributions
   latest_tag: ${{ git.latest_tag( git_repo_url ) }}
   # version: ${{ latest_tag }}
-  version: 1.10.2.3
 
 package:
   name: ${{ name }}
-  version: ${{ version }}
+  version: ${{ latest_tag }}
 
 source:
   git: ${{ git_repo_url }}
