@@ -3,3 +3,7 @@ output
 auth.json
 auth.lock
 .lazy.lua
+
+# pixi environments
+.pixi
+*.egg-info
