@@ -3,7 +3,7 @@ name := `basename "$PWD"`
 build: clean
   rattler-build build -r recipe.yaml \
   {{ if path_exists("variant_config.yaml") == 'true' { "--variant-config " + "variant_config.yaml" } else { "" } }} \
-  --no-include-recipe --experimental -vvvv \
+  --no-include-recipe --experimental \
   --output-dir ../output \
   -c nvidia/label/cuda-12.4.0 \
   -c nvidia \
@@ -11,8 +11,7 @@ build: clean
   -c conda-forge \
   --no-build-id --keep-build \
   2>&1 | tee output_file.txt
-  # 2> >(tee error.log) | tee output.log
-  # --keep-workspace \
+  # -vvvv \
 
 clean:
   -rm -rf ../output/bld/rattler-build_{{name}}/

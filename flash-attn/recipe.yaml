@@ -1,12 +1,7 @@
 context:
   name: "flash-attn"
-  # cuda: "12.4"
-  # pytorch: "2.4.1"
   git_url: https://github.com/Dao-AILab/flash-attention.git
   git_tag: ${{ git.latest_tag( git_url ) }}
-  # short_cuda: ${{ cuda_compiler_version | lower }}
-
-  # fa_cuda_version: ${{  }}
 
 package:
   name: ${{ name }}
@@ -18,26 +13,29 @@ source:
 
 build:
   number: ${{ build|int + (microarch_level|int) * 100 + 1 }}
-  # merge_build_and_host_envs: false
   script:
-    - mkdir -p $SRC_DIR/bin
-    - |
-      cat << 'EOF' > $SRC_DIR/bin/nvcc
-      #!/bin/sh
-      sccache $PREFIX/bin/nvcc "$@"
-      EOF
-    - chmod +x $SRC_DIR/bin/nvcc
-    - export CUDA_HOME=$SRC_DIR
+    - export CUDA_HOME=$PREFIX
+    # enable sccache
+    # - mkdir -p $SRC_DIR/bin
+    # - |
+    #   cat << 'EOF' > $SRC_DIR/bin/nvcc
+    #   #!/bin/sh
+    #   sccache $PREFIX/bin/nvcc "$@"
+    #   EOF
+    # - chmod +x $SRC_DIR/bin/nvcc
+    # - export SCCACHE_LOG=trace
+    # - export CUDA_HOME=$SRC_DIR
+
     - $CUDA_HOME/bin/nvcc -V
     - export MAX_JOBS=$(expr $CPU_COUNT - 16)
     # - export TORCH_CUDA_ARCH_LIST=8.0+PTX
     - export TORCH_CUDA_ARCH_LIST="8.0;8.6;8.9;9.0+PTX"
     - export FLASH_ATTENTION_FORCE_BUILD="TRUE"
     - export FLASH_ATTENTION_FORCE_CXX11_ABI="FALSE"
-    - export SCCACHE_LOG=trace
     # - export C="sccache $C"
     # - export CXX="sccache $CXX"
     - pip install . -vvv --no-deps --no-build-isolation
+    - pip install csrc/layer_norm -vvv --no-deps --no-build-isolation
     - sccache --show-stats
     # - $PYTHON setup.py install
 
@@ -81,17 +79,6 @@ requirements:
     - einops
     # - cuda
     - pytorch
-  # run_constraints:
-  #   - pytorch
-    # - pytorch::pytorch-cuda = ${{ short_cuda }}
 tests:
   - script:
       - python -c "import torch, flash_attn, flash_attn_2_cuda"
-    # requirements:
-    #   run:
-    #     - pytorch::pytorch ${{ pytorch }}
-  # - python:
-  #     imports:
-  #       - torch
-  #       - flash_attn
-  #       - flash_attn_2_cuda
