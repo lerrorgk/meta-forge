@@ -1,0 +1,27 @@
+context:
+  name: "duf"
+  git_url: https://github.com/muesli/duf.git
+  git_tag: ${{ git.latest_tag( git_url ) }}
+
+source:
+  - git: ${{ git_url }}
+    tag: ${{ git_tag }}
+
+package:
+  name: ${{ name }}
+  version: ${{ git_tag[1:] }}
+
+build:
+  script:
+    - export CGO_ENABLED=0
+    - export LDFLAGS="-s -w"
+    - go build -buildmode=pie -trimpath -o=${PREFIX}/bin/${PKG_NAME} -ldflags="${LDFLAGS}"
+
+requirements:
+  build:
+    # - ${{ compiler('go') }}
+    - go
+    - patchelf
+tests:
+  - script:
+      - duf --help
