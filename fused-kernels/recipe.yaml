@@ -1,0 +1,56 @@
+context:
+  name: "fused-kernels"
+  version: "0.0.1"
+  fa_git_url: https://github.com/Dao-AILab/flash-attention.git
+  pf_git_url: ../../platformers
+
+package:
+  name: ${{ name }}
+  version: ${{ version }}
+
+source:
+  - git: ${{ fa_git_url }}
+    tag: ${{ git.latest_tag( fa_git_url ) }}
+    target_directory: fa
+
+  # - git: ${{ pf_git_url }}
+  #   tag: ${{ git.latest_tag( pf_git_url ) }}
+  - path: ${{ pf_git_url }}
+    target_directory: pf
+
+build:
+  number: ${{ build|int + (microarch_level|int) * 100 + 1 }}
+  string: py${{ python | version_to_buildstring }}_cuda${{ cuda | version_to_buildstring }}_pt${{ pytorch | replace('.', '') }}
+  script:
+    - export CUDA_HOME=$PREFIX
+    - $CUDA_HOME/bin/nvcc -V
+    - export MAX_JOBS=$(expr $CPU_COUNT - 16)
+    # - export TORCH_CUDA_ARCH_LIST=8.0+PTX
+    - export TORCH_CUDA_ARCH_LIST="8.0+PTX 9.0+PTX"
+    - export LDFLAGS="$LDFLAGS -L$PREFIX/lib/stubs"
+    - pip install pf/csrc/vllm -vvv --no-deps --no-build-isolation --global-option="build_ext" --global-option="-j$MAX_JOBS"
+    - pip install fa/csrc/layer_norm -vvv --no-deps --no-build-isolation --global-option="build_ext" --global-option="-j$MAX_JOBS"
+    # - $PYTHON setup.py install
+
+requirements:
+  host:
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+    - ${{ stdlib('c') }}
+    - cuda
+    - pytorch-cuda ${{ cuda }}
+    - cuda-driver-dev ${{ cuda }}
+    - pytorch
+    - python
+    - pip
+    - python-ninja
+
+  run:
+    - pytorch
+    - fsspec
+tests:
+  - python:
+      imports:
+        - torch
+        - dropout_layer_norm
+        - clatformers

@@ -13,6 +13,7 @@ source:
 
 build:
   number: ${{ build|int + (microarch_level|int) * 100 + 1 }}
+  string: py${{ python | version_to_buildstring }}_cuda${{ cuda | version_to_buildstring }}_pt${{ pytorch | replace('.', '') }}
   script:
     - export CUDA_HOME=$PREFIX
     # enable sccache
@@ -29,20 +30,14 @@ build:
     - $CUDA_HOME/bin/nvcc -V
     - export MAX_JOBS=$(expr $CPU_COUNT - 16)
     # - export TORCH_CUDA_ARCH_LIST=8.0+PTX
-    - export TORCH_CUDA_ARCH_LIST="8.0;8.6;8.9;9.0+PTX"
+    - export TORCH_CUDA_ARCH_LIST="8.0+PTX 9.0+PTX"
     - export FLASH_ATTENTION_FORCE_BUILD="TRUE"
     - export FLASH_ATTENTION_FORCE_CXX11_ABI="FALSE"
     # - export C="sccache $C"
     # - export CXX="sccache $CXX"
     - pip install . -vvv --no-deps --no-build-isolation
-    - pip install csrc/layer_norm -vvv --no-deps --no-build-isolation
     - sccache --show-stats
     # - $PYTHON setup.py install
-
-  dynamic_linking:
-    rpaths:
-      - lib/
-      - ${{ SP_DIR }}/torch/lib/
 
 requirements:
   host:
@@ -79,6 +74,10 @@ requirements:
     - einops
     # - cuda
     - pytorch
+    - fsspec
 tests:
-  - script:
-      - python -c "import torch, flash_attn, flash_attn_2_cuda"
+  - python:
+      imports:
+        - torch
+        - flash_attn
+        - flash_attn_2_cuda
