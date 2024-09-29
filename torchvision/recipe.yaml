@@ -1,7 +1,8 @@
 context:
-  name: "deepspeed"
-  git_url: https://github.com/microsoft/DeepSpeed.git
-  git_tag: ${{ git.latest_tag( git_url ) }}
+  name: "torchvision"
+  git_url: https://github.com/pytorch/vision.git
+  git_tag: "v0.19.1"
+  # git_tag: ${{ git.latest_tag( git_url ) }}
 
 package:
   name: ${{ name }}
@@ -14,79 +15,58 @@ source:
 build:
   number: ${{ build|int + (microarch_level|int) * 100 + 1 }}
   string: py${{ python | version_to_buildstring }}_cuda${{ cuda | version_to_buildstring }}_pt${{ pytorch | replace('.', '') }}
+  dynamic_linking:
+    missing_dso_allowlist: ["libc10*", "libtorch*"]
   script:
     - export CUDA_HOME=$PREFIX
     - $CUDA_HOME/bin/nvcc -V
     - export MAX_JOBS=$(expr $CPU_COUNT - 16)
-
-    - | # FIX link
-      cp -r accelerator/* deepspeed/accelerator
-      cp -r csrc/* deepspeed/ops/csrc
-      cp -r op_builder/* deepspeed/ops/op_builder
-
-    - | # Disable sparse_attn since it requires an exact version of triton==1.0.0
-      export DS_BUILD_OPS=1
-      export DS_BUILD_SPARSE_ATTN=0
-      # Disable building with EvoFormerAttention which requires CUTLASS
-      export DS_BUILD_EVOFORMER_ATTN=0
-      # Disable building with CUTLASS ops
-      export DS_BUILD_CUTLASS_OPS=0
-      # Disable building with ragged device ops
-      export DS_BUILD_RAGGED_DEVICE_OPS=0
-      export DS_BUILD_FP_QUANTIZER=0
-      export DS_BUILD_GDS=0
-      export DS_ACCELERATOR=cuda
-      # export DS_ENABLE_NINJA=1
-      export DS_BUILD_QUANTIZER=0
-      export DS_BUILD_TRANSFORMER_INFERENCE=0
-      export LDFLAGS="$LDFLAGS -L$PREFIX/lib/stubs"
-
+    - export FORCE_CUDA=1
     - export TORCH_CUDA_ARCH_LIST="8.0+PTX 9.0+PTX"
     - pip install . -vvv --global-option="build_ext" --global-option="-j$MAX_JOBS"
 
 requirements:
-  host:
-    # variant
+  build:
     - if: microarch_level|int > 0
       then: x86_64-microarch-level ${{ microarch_level }}
-    - cuda
-    - cuda-driver-dev ${{ cuda }}
-    - pytorch-cuda ${{ cuda }}
-    - pytorch
-    - python
-
     - ${{ compiler('c') }}
     - ${{ compiler('cxx') }}
     # - ${{ compiler('cuda') }}
     - ${{ stdlib('c') }}
+    - ninja
+    - cmake
+
+  host:
+    # variant
+    - cuda
+    - cuda-driver-dev ${{ cuda }}
+    - pytorch-cuda ${{ cuda }}
+    - pytorch
+    - python-ninja
+    - python
     # - ninja
     # host:
     - pip
-    - libaio
-    - ninja
-    - cmake
-    - py-cpuinfo
+    - libpng
+    - libjpeg-turbo
+    - libwebp
+
   run:
     - pytorch
-    - cuda
-    - python
-    - packaging
-    - hjson-py
-    - nvidia-ml-py
-    - psutil
-    - pydantic
-    - tqdm
+    - pillow
     - numpy
-    - setuptools
-    - py-cpuinfo
-    - python-ninja
+    - libpng
+    - libjpeg-turbo
+    - libwebp
+    - fsspec
 
   ignore_run_exports:
     from_package:
-      - gcc_${{ target_platform }}
-      - gxx_${{ target_platform }}
       - sysroot_${{ target_platform }}
+
 tests:
-  - script:
-      - export CUDA_HOME=$PREFIX
-      - ds_report
+  - python:
+      imports:
+        - torchvision
+        - torchvision.datasets
+        - torchvision.transforms
