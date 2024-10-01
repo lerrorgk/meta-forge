@@ -43,6 +43,5 @@ test-venv package:
   just clean-cache {{ package }}
   micromamba create -c {{ build_output }} -n temp {{ package }} --yes
 
-output-upload target:
-  rsync -avP output/noarch/ {{ target }}:~/.cache/prefix/noarch/
-  rsync -avP output/linux-64/ {{ target }}:~/.cache/prefix/linux-64/
+s3-mirror:
+  mc mirror --exclude "bld/*" --exclude "src_cache/*" ~/.cache/prefix/ us3-gd/meta-forge/ --disable-multipart

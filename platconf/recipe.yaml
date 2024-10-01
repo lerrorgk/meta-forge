@@ -1,0 +1,30 @@
+context:
+  name: "platconf"
+  version: "0.0.1"
+  # torch_version: ${{ pytorch | replace('.', '') }}
+
+package:
+  name: ${{ name }}
+  version: ${{ version }}
+
+source:
+  - path: ../../platconf
+
+build:
+  noarch: python
+  script:
+    - pip install . -vvv --no-deps --no-build-isolation
+    # - $PYTHON setup.py install
+
+requirements:
+  host:
+    - python
+    - pip
+    - hatchling
+  run:
+    - ml-collections
+    - absl-py
+tests:
+  - python:
+      imports:
+        - ml_collections
