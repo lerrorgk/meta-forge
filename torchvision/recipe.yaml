@@ -48,21 +48,21 @@ requirements:
     # host:
     - pip
     - libpng
-    - libjpeg-turbo
+    - conda-forge::libjpeg-turbo
     - libwebp
 
   run:
     - pytorch
     - pillow
     - numpy
-    - libpng
-    - libjpeg-turbo
-    - libwebp
     - fsspec
 
   ignore_run_exports:
     from_package:
       - sysroot_${{ target_platform }}
+      - libpng
+      - libjpeg-turbo
+      - libwebp
 
 tests:
   - python:
