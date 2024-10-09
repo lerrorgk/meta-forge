@@ -1,0 +1,50 @@
+context:
+  name: "ksmm"
+  version: "1.1.0"
+  git_url: git@github.com:SUSTech-data/ksmm.git
+  git_tag: ${{ git.latest_tag( git_url ) }}
+
+package:
+  name: ${{ name }}
+  version: ${{ version }}
+
+source:
+  - git: ${{ git_url }}
+    tag: ${{ git_tag }}
+
+build:
+  number: ${{ build|int + (microarch_level|int) * 100 + 1 }}
+  noarch: python
+  script:
+    - pip install . -vv
+    - ls -d ./examples/* | grep -v python | xargs -I {} sh -c 'jupyter kernelspec install --prefix $CONDA_PREFIX "{}" --replace'
+
+requirements:
+  host:
+    - python =3.10
+    - pip
+    - poetry
+    - yarn
+    - nodejs >=20.12.2
+    - jupyterlab >=4.0.0b0,<5
+    - hatchling >=1.5.0
+    - hatch-nodejs-version
+    - hatch-jupyter-builder>=0.5
+  run:
+    - jupyterlab >=4.0.0b0,<5
+    - jupyter_server >=2.0.1,<3
+    - nodejs >=20.12.2
+    - jupyter-packaging
+
+tests:
+  - script:
+    - jupyter lab --version
+    - jlpm --version
+    - jupyter labextension list
+    - jupyter labextension list 2>&1 | grep -ie "jupyterlab-ksmm.*OK"
+    # requirements:
+    #   run:
+    #     - jupyterlab >=4.0.0b0,<5
+    #     - jupyter_server >=2.0.1,<3
+    #     - nodejs >=12
+    #     - jupyter-packaging
