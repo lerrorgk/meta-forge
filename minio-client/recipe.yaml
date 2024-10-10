@@ -1,0 +1,30 @@
+context:
+  name: "minio-client"
+  git_url: https://github.com/minio/mc.git
+  git_rev: ${{ git.head_rev( git_url ) }}
+
+source:
+  - git: ${{ git_url }}
+
+
+package:
+  name: ${{ name }}
+  version: "2024.10.02"
+
+build:
+  string: ${{ git_rev[:8] }}
+  script:
+    - export CGO_ENABLED=0
+    - export LDFLAGS="-s -w"
+    - go build -buildmode=pie -trimpath -o=${PREFIX}/bin/mc -ldflags="${LDFLAGS}"
+    # - mkdir $PREFIX/bin -p
+    # - cp mc $PREFIX/bin/mc 
+
+requirements:
+  build:
+    # - ${{ compiler('go') }}
+    - go >= 1.22
+    - patchelf
+tests:
+  - script:
+      - mc --help

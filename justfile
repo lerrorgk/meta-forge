@@ -44,4 +44,7 @@ test-venv package:
   micromamba create -c {{ build_output }} -n temp {{ package }} --yes
 
 s3-mirror:
-  mc mirror --exclude "bld/*" --exclude "src_cache/*" ~/.cache/prefix/ us3-gd/meta-forge/ --disable-multipart
+  mc mirror --exclude "bld/*" --exclude "src_cache/*" {{ build_output }} us3-gd/meta-forge/ --disable-multipart
+
+s3-mirror-rev:
+  mc mirror --exclude "bld/*" --exclude "src_cache/*" us3-gd/meta-forge/ {{ build_output }} --disable-multipart
