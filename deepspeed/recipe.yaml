@@ -80,6 +80,7 @@ requirements:
     - setuptools
     - py-cpuinfo
     - python-ninja
+    - msgpack-python
 
   ignore_run_exports:
     from_package:
