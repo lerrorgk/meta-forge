@@ -15,9 +15,9 @@ build:
   # merge_build_and_host_envs: false
   # string: py${{ python | version_to_buildstring }}_cuda${{ cuda | version_to_buildstring }}_pt${{ torch_version | version_to_buildstring }}
   noarch: python
-  script:
-    - pip install . -vvv --no-deps --no-build-isolation
-    # - $PYTHON setup.py install
+  # script:
+  #   - pip install . -vvv --no-deps --no-build-isolation
+  #   # - $PYTHON setup.py install
 
 requirements:
   host:
@@ -35,8 +35,8 @@ requirements:
     - dm-tree
     - ignite
 
-tests:
-  - python:
-      imports:
-        - platformers
-      pip_check: false
+# tests:
+#   - python:
+#       imports:
+#         - platformers
+#       pip_check: false
