@@ -1,0 +1,62 @@
+context:
+  name: "mirage"
+  git_url: https://github.com/mirage-project/mirage.git
+  git_tag: ${{ git.latest_tag( git_url ) }}
+
+package:
+  name: ${{ name }}
+  version: ${{ git_tag[1:] }}
+
+source:
+  - git: ${{ git_url }}
+    tag: ${{ git_tag }}
+
+build:
+  number: ${{ build|int + (microarch_level|int) * 100 + 1 }}
+  string: py${{ python | version_to_buildstring }}_cuda${{ cuda | version_to_buildstring }}_pt${{ pytorch | replace('.', '') }}
+  script:
+    - export CUDA_HOME=$PREFIX
+    - $CUDA_HOME/bin/nvcc -V
+    - |
+      export MAX_JOBS=$(( ($CPU_COUNT - 16) < 1 ? 1 : ($CPU_COUNT - 16) ))
+    - export LDFLAGS="$LDFLAGS -L$PREFIX/lib/stubs"
+    - export TORCH_CUDA_ARCH_LIST="8.0+PTX 9.0+PTX"
+    - pip install . -vv --no-deps --no-build-isolation
+
+requirements:
+  build:
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+    - ninja
+    - cmake
+  host:
+    # variant
+    - if: microarch_level|int > 0
+      then: x86_64-microarch-level ${{ microarch_level }}
+    - cuda
+    - cuda-driver-dev ${{ cuda }}
+    - pytorch-cuda ${{ cuda }}
+    - conda-forge::cudnn
+    - pytorch
+    - python
+    - ${{ stdlib('c') }}
+    - pip
+    - z3-solver
+    - cython
+  run:
+    - pytorch
+    - python
+    - z3-solver
+    - numpy
+
+  ignore_run_exports:
+    from_package:
+      - gcc_${{ target_platform }}
+      - gxx_${{ target_platform }}
+      - sysroot_${{ target_platform }}
+      - cudnn
+tests:
+  - python:
+      imports:
+        - mirage
+      pip_check: false
