@@ -1,0 +1,45 @@
+context:
+  name: "neovim"
+  git_url: https://github.com/neovim/neovim.git
+  # git_tag: ${{ git.latest_tag( git_url ) }}
+  git_tag: "stable"
+
+source:
+  - git: ${{ git_url }}
+    tag: ${{ git_tag }}
+
+package:
+  name: ${{ name }}
+  version: ${{ git_tag[1:] }}
+
+build:
+  number: 0
+  script:
+    # - cd neovim
+    - mkdir build && cd build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+    - ninja
+    - ninja install
+    # - luarocks install lpeg
+requirements:
+  build:
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+  host:
+    - cmake
+    - ninja
+    - luajit
+    - libuv
+    - luv
+    - iconv
+    - unibilium
+    - lua
+    - lua-lpeg
+    - msgpack-c
+    - libtree-sitter
+    - libvterm
+
+tests:
+  - script:
+      - nvim --help
+      - nvim --version

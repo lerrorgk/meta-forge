@@ -1,0 +1,35 @@
+context:
+  name: "sglang"
+  git_url: https://github.com/sgl-project/sglang.git
+  git_tag: ${{ git.latest_tag( git_url ) }}
+
+package:
+  name: ${{ name }}
+  version: ${{ git_tag[1:] }}
+
+source:
+  - git: ${{ git_url }}
+    tag: ${{ git_tag }}
+
+build:
+  noarch: python
+  script:
+    - cd python
+    - pip install . -vv --no-deps --no-build-isolation
+requirements:
+  host:
+    # variant
+    - python
+    - pip
+    - setuptools
+  run:
+    - python
+    - numpy
+    - tqdm
+    - requests
+    - flashinfer
+
+tests:
+  - python:
+      imports:
+        - sglang

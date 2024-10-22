@@ -1,0 +1,59 @@
+context:
+  name: "flashinfer"
+  git_url: https://github.com/flashinfer-ai/flashinfer.git
+  git_tag: ${{ git.latest_tag( git_url ) }}
+
+package:
+  name: ${{ name }}
+  version: ${{ git_tag[1:] }}
+
+source:
+  - git: ${{ git_url }}
+    tag: ${{ git_tag }}
+build:
+  number: ${{ build|int + (microarch_level|int) * 100 + 1 }}
+  string: py${{ python | version_to_buildstring }}_cuda${{ cuda | version_to_buildstring }}_pt${{ pytorch | replace('.', '') }}
+  script:
+    - export CUDA_HOME=$PREFIX
+    - $CUDA_HOME/bin/nvcc -V
+    - |
+      export MAX_JOBS=$(( ($CPU_COUNT - 16) < 1 ? 1 : ($CPU_COUNT - 16) ))
+    - export TORCH_CUDA_ARCH_LIST="8.0+PTX 9.0+PTX"
+    # - export FLASHINFER_INCLUDE_DIR=$SRC_DIR/include
+    # - export TORCH_NVCC_FLAGS="-I$FLASHINFER_INCLUDE_DIR"
+    # - export CPPFLAGS="$CPPFLAGS -I$FLASHINFER_INCLUDE_DIR"
+    - cp -r include/ python/
+    - cp -r 3rdparty/* python/3rdparty
+    - cd python
+    - pip install . -vv --no-deps --no-build-isolation
+    # - pip install flashinfer -i https://flashinfer.ai/whl/cu124/torch2.4/
+
+requirements:
+  host:
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+    - cuda
+    - cuda-cudart-dev
+    - libcusparse-dev
+    - sympy == 1.13.1
+    - pytorch-cuda ${{ cuda }}
+    - pytorch
+    - python
+    - pip
+    - psutil
+    - python-ninja
+    - packaging
+    - setuptools
+    - lit
+    - numpy
+    - einops
+    - fsspec
+  run:
+    - einops
+    - pytorch
+    - fsspec
+tests:
+  - python:
+      imports:
+        - torch
+        - flashinfer
