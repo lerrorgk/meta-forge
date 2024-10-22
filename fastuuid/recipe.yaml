@@ -14,31 +14,22 @@ source:
 
 build:
   number: 1
-  # noarch: python
-  # files:
-  #   include:
-  #     - "**/*"
-  #   exclude:
-  #     # - $SP_DIR/${{ package_name }}/__pycache__/*
-  #     - "**/__pycache__/*"
 
   script:
-    - $PREFIX/bin/pip install . -v
-    # - mkdir -p $PREFIX/bin
-    # - cp "$RECIPE_DIR/post-link.sh" $PREFIX/bin/.${{package_name}}-post-link.sh
-    # - chmod +x $PREFIX/bin/.${{package_name}}-post-link.sh
+    - pip install . -vv --no-deps --no-build-isolation
     # - ls $SP_DIR/${{ package_name }}/__pycache__
-    - rm -rf $SP_DIR/${{ package_name }}/__pycache__
-  python:
-    skip_pyc_compilation:
-      # - "__init__.py"
-      - "**/__init__.py"
+    # - rm -rf $SP_DIR/${{ package_name }}/__pycache__
+  # python:
+  #   skip_pyc_compilation:
+  #     # - "__init__.py"
+  #     - "**/__init__.py"
 requirements:
   host:
     - maturin
     - pip
     # - python=3.10
     - python
+    - rust
 
   run:
     - python
