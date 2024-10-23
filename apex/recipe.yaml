@@ -1,0 +1,53 @@
+context:
+  name: "apex"
+  git_url: https://github.com/NVIDIA/apex.git
+  git_tag: ${{ git.latest_tag( git_url ) }}
+
+package:
+  name: ${{ name }}
+  version: ${{ git_tag[1:] }}
+
+source:
+  - git: ${{ git_url }}
+    tag: ${{ git_tag }}
+
+build:
+  script:
+    - export CUDA_HOME=$PREFIX
+    - $CUDA_HOME/bin/nvcc -V
+    - export MAX_JOBS=$(expr $CPU_COUNT - 16)
+    - export TORCH_CUDA_ARCH_LIST="8.0+PTX 9.0+PTX"
+    - pip install -v --disable-pip-version-check --no-build-isolation ./
+
+requirements:
+  host:
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+    - sccache
+    - cuda
+    - cuda-cudart-dev
+    - libcusparse-dev
+    - pytorch-cuda ${{ cuda }}
+    - pytorch
+    - python
+    - pip
+    - psutil
+    - python-ninja
+    - packaging
+    - setuptools
+    - lit
+  # torch:
+    - fsspec
+  run:
+    - pytorch
+    - fsspec
+    - numpy
+# apex:
+    - packaging
+    - sympy==1.13.1
+
+tests:
+  - python:
+      imports:
+        - torch
+        - apex
