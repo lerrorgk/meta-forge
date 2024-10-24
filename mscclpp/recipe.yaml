@@ -1,0 +1,49 @@
+context:
+  name: "mscclpp"
+  git_url: https://github.com/microsoft/mscclpp.git
+  git_tag: ${{ git.latest_tag( git_url ) }}
+
+package:
+  name: ${{ name }}
+  version: ${{ git_tag[1:] }}
+
+source:
+  - git: ${{ git_url }}
+    tag: ${{ git_tag }}
+
+build:
+  script:
+    - export CUDA_HOME=$PREFIX
+    - export CUDACXX=$PREFIX/bin/nvcc
+    - export CC=$PREFIX/libexec/gcc
+    - |
+      export MAX_JOBS=$(( ($CPU_COUNT - 16) < 1 ? 1 : ($CPU_COUNT - 16) ))
+    - export TORCH_CUDA_ARCH_LIST="8.0+PTX 9.0+PTX"
+    - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX -DBUILD_PYTHON_BINDINGS=OFF ..
+    - make -j mscclpp mscclpp_static
+    - make install/fast
+    - python -m pip install .
+
+requirements:
+  host:
+    - cuda
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+    - ${{ stdlib('c') }}
+    - make
+    - cmake
+    - python-ninja
+    - cuda-cudart-dev
+    - libcusparse-dev
+    - python
+    - pip
+    - psutil
+    - setuptools
+
+    - scikit-build-core
+
+
+tests:
+  - python:
+      imports:
+        - mscclpp
